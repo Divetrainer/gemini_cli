@@ -1,5 +1,6 @@
 import os
 import argparse
+from functions.prompts import system_prompt
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
@@ -23,7 +24,9 @@ contents= args.user_prompt
 model="gemini-2.5-flash"
 
 gen_ai_response = client.models.generate_content(
-	model = model , contents = messages,
+	model = model,
+	contents = messages,
+	config=types.GenerateContentConfig(system_instruction=system_prompt, temperature=0),
 	)
 
 if gen_ai_response.usage_metadata is None:
