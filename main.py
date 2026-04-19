@@ -1,6 +1,7 @@
 import os
 import argparse
 from functions.prompts import system_prompt
+from functions.call_function import available_functions
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
@@ -26,7 +27,9 @@ model="gemini-2.5-flash"
 gen_ai_response = client.models.generate_content(
 	model = model,
 	contents = messages,
-	config=types.GenerateContentConfig(system_instruction=system_prompt, temperature=0),
+	config=types.GenerateContentConfig(
+		tools=[available_functions], system_instruction=system_prompt, temperature=0
+		),
 	)
 
 if gen_ai_response.usage_metadata is None:
@@ -41,9 +44,16 @@ def verbose_flag():
 		print(f"Prompt tokens: ", prompt_token)
 		print(f"Response tokens: ", candidate_token)
 
+def function_check():
+	if gen_ai_response.function_calls:
+		for call in gen_ai_response.function_calls:
+			print(f"Calling function: {call.name}({call.args})")
+			return True
+
 def main():
 	verbose_flag()
-	print(gen_ai_response.text)
+	if not function_check():
+		print(gen_ai_response.text)
 
 if __name__ == "__main__":
     main()
