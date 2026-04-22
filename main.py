@@ -1,7 +1,7 @@
 import os
 import argparse
 from functions.prompts import system_prompt
-from functions.call_function import available_functions
+from functions.call_function import available_functions, call_function
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
@@ -46,9 +46,19 @@ def verbose_flag():
 
 def function_check():
 	if gen_ai_response.function_calls:
+		results = []
 		for call in gen_ai_response.function_calls:
-			print(f"Calling function: {call.name}({call.args})")
-			return True
+			function_call_result = call_function(call, verbose=args.verbose)
+			if not function_call_result.parts:
+				raise Exception("Error in processing Function Call")
+			if function_call_result.parts[0].function_response is None:
+				raise Exception("Error")
+			if function_call_result.parts[0].function_response.response is None:
+				raise Exception("Error in processing Function Call")
+			results.append(function_call_result.parts[0])
+			if args.verbose:
+				print(f"-> {function_call_result.parts[0].function_response.response}")
+		return True
 
 def main():
 	verbose_flag()
